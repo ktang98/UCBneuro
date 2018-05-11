@@ -2,8 +2,9 @@ global folder;
 global folder2;
 folder = uigetdir();
 img = struct(dir(fullfile(folder,'*.jpg')));  
-A = []; % create the matrix
+A = []; % create the matrix [row column depth redVal]
 C = [];
+sideViewMatrix = [];
 nameNum = [];
 for k = 1: length(img) % makes the names numerical 
     nameNum = [nameNum [str2num(erase(img(k).name, '.jpg'))]];
@@ -15,23 +16,28 @@ for k = 1: length(sortedNameNum) %iterate through the images
     imageString = strcat(num2str(image), '.jpg'); 
     % get the x,y coords of each red/orange pixel 
     B = red_pixel_coordinates(imageString);
+    redSideView = sideView(red_pixel_coordinates);
+    sideViewMatrix = [sideViewMatrix; redSideView]; % concat vertically
     A = [A; B]; % vertically concat the two matrices 
 end
 
-folder2 = uigetfile();
-img = struct(dir(fullfile(folder2,'*.jpg')));  
-
+folder2 = uigetdir();
+img2 = struct(dir(fullfile(folder2,'*.jpg')));  
+nameNum2 = [];
+for k = 1: length(img2) % makes the names numerical 
+    nameNum2 = [nameNum2 [str2num(erase(img(k).name, '.jpg'))]];
+end;
 for k = 1: length(sortedNameNum) %iterate through the images
     %'select' a particular image in the file 
     image = sortedNameNum(k);
     imageString = strcat(num2str(image), '.jpg'); 
-    % get the x,y coords of each red/orange pixel 
-    B = red_pixel_coordinates(imageString);
-    A = [A; B]; % vertically concat the two matrices 
-    D = blue_pixel_coordinates(imageString);
+    % get the x,y coords of each red/orange pixel  
+    D = template_pixel_coordinates(imageString);
     C = [C; D];
 end
 drawPlot(A, C);
+drawSideView(sideViewMatrix);
+
 
 %get the red/orange pixel coordinates
 function B = red_pixel_coordinates(image)
@@ -67,15 +73,19 @@ function B = red_pixel_coordinates(image)
     end
 end
 
-function D = blue_pixel_coordinates(image)
+function D = template_pixel_coordinates(image)
     global folder;
     sliceDepth = 0.5; % subject to change
     % get the z-value
     imageNum = erase(image, '.jpg');
     nameNum = str2num(imageNum) * sliceDepth; % the z-value
     % set standard values for red/orange
-    bMin = 190;
-    bMax = 255;
+    aMin = 100;
+    aMax = 110;
+    bMin = 100;
+    bMax = 110;
+    gMin = 100;
+    gMax = 110;
     rgbImage = imread(fullfile(folder, image));
     [height, width, ~] = size(rgbImage);
     D = zeros(height, 3);
@@ -93,9 +103,6 @@ function D = blue_pixel_coordinates(image)
 end
 
 function drawPlot(matrix1, matrix2) 
-    %C = repmat([1, 0.5 ,0],numel(matrix(:, 1), 1));
-    %c = C(:);
-    
     % remove all the zero rows
     TF1 = matrix1(:,1)==0; 
     matrix1(TF1, :) = [];
@@ -106,4 +113,20 @@ function drawPlot(matrix1, matrix2)
     hold on;
     scatter3(matrix1(:, 2), matrix1(:, 3), matrix1(:, 1), 'Filled');
     rotate3d on
+end
+
+function sideViewMatrix = sideView(matrix)
+    rowCol = matrix(:, 1:2);
+    depth = matrix(1, 3);
+    %redVals = matrix(:, 4);
+    maxCol = 
+    [height, ~] = size(rowCol);
+    newCol = zeros(height, 1);
+    sideViewMatrix = [rowCol newCol];
+    sideViewMatrix(:, 2) = depth;
+    
+end
+
+function drawSideView(matrix)
+    scatter(matrix(:, 1), matrix(:, 2), 'Filled');
 end

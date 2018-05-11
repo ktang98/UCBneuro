@@ -2,7 +2,7 @@ global folder;
 global folder2;
 folder = uigetdir();
 img = struct(dir(fullfile(folder,'*.jpg')));  
-A = []; % create the matrix
+A = []; % create the matrix [row column depth redVal]
 C = [];
 nameNum = [];
 for k = 1: length(img) % makes the names numerical 
@@ -33,6 +33,7 @@ for k = 1: length(sortedNameNum) %iterate through the images
     C = [C; D];
 end
 drawPlot(A, C);
+
 
 %get the red/orange pixel coordinates
 function B = red_pixel_coordinates(image)
@@ -109,3 +110,5 @@ function drawPlot(matrix1, matrix2)
     scatter3(matrix1(:, 2), matrix1(:, 3), matrix1(:, 1), 'Filled');
     rotate3d on
 end
+
+
